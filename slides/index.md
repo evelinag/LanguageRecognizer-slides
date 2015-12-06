@@ -52,7 +52,7 @@ What is the language of this text?
 </td>
 <td class = "noborder fragment">
 
-![C3PO](images/c3po.jpg)
+![C3PO](images/C3PO.jpg)
 **This is Hungarian, of course!**
 
 </td>
