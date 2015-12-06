@@ -1,0 +1,597 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>F# via machine learning</title>
+    <meta name="description" content="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression.">
+    <meta name="author" content="Evelina Gabasova">
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="//code.jquery.com/jquery-1.8.0.js"></script>
+    <script src="//code.jquery.com/ui/1.8.23/jquery-ui.js"></script>
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.2.1/css/bootstrap-combined.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/white.css" id="theme">
+    <link type="text/css" rel="stylesheet" href="fsharp.formatting/styles/deedle.css" />
+    <link type="text/css" rel="stylesheet" href="images/styles/light.css" />
+    <link type="text/css" rel="stylesheet" href="css/custom.css" />
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <script src="fsharp.formatting/styles/tips.js" type="text/javascript"></script>
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/zenburn.css">
+    <!-- If the query includes 'print-pdf', include the PDF print sheet -->
+    <script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = 'css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+    </script>
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+<body>
+    <div class="reveal">
+        
+        <!-- Any section element inside of this container is displayed as a slide -->
+        <div class="slides">
+            <section >
+
+<section >
+
+<h1>Machine Learning</h1>
+
+<h2>with Functional Programming and F#</h2>
+
+<br/>
+
+<p>Evelina Gabasova (<a href="http://www.twitter.com/evelgab">@evelgab</a>)</p>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>F# for Machine Learning</h1>
+
+<p><em>"F# empowers users to tackle complex computing problems with simple, maintainable and robust code."</em></p>
+
+<br />
+
+<h2>What this really means</h2>
+
+<ul>
+<li>Can implement complex ML algorithms</li>
+<li>Code is easy to understand</li>
+<li>We can integrate it with .NET</li>
+</ul>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Recognizing languages</h1>
+
+<p><img src="images/detect_language.png" alt="Detect language" /></p>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<table><tr><td class="noborder">
+
+<h1>Recognizing languages</h1>
+
+<p>What is the language of this text?</p>
+
+<br />
+<br />
+
+<p><em>A Csillagok haboruja egy uropera filmsorozatnak, irodalmi muveknek es szamitogepes jatekoknak a neve.</em></p>
+
+</td>
+<td class = "noborder fragment">
+
+<p><img src="images/c3po.jpg" alt="C3PO" />
+<strong>This is Hungarian, of course!</strong></p>
+
+</td>
+</tr></table>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>What you won't learn</h1>
+
+<ul>
+<li>how to use machine learning frameworks</li>
+</ul>
+
+<br /><br />
+
+<div class = "fragment">
+
+<h2>What you will learn</h2>
+
+<ul>
+<li>how two important machine learning algorithms work</li>
+<li>how to implement them in F#</li>
+</ul>
+
+</div>
+
+</section>
+
+</section>
+
+<section >
+
+<section >
+
+<h1>PART 1</h1>
+
+<h2>Recognizing languages <br /> using letter pair frequency</h2>
+
+<br />
+<div class="fragment">
+
+<p><strong> [ NEAREST NEIGHBOUR CLASSIFIER ] </strong></p>
+
+</div>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>The plan</h1>
+
+<ul>
+<li><p><strong>Get sample text</strong> from from Wikipedia pages (<em>done</em>)</p></li>
+<li><p><strong>Calculate features</strong> frequencies of <em>letter pairs</em></p></li>
+<li><p><strong>Compare languages</strong> using their <em>features</em></p></li>
+<li><strong>Classify language</strong> find the <em>most similar</em> one</li>
+</ul>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>STEP 1</h1>
+
+<h2>Calculating frequencies</h2>
+
+<p>Example using sample English text <em>"the three"</em></p>
+
+<br />
+<table><tr><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>_t</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="even">
+<td><p>th</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="odd">
+<td><p>he</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>e_</p></td>
+<td><p>2</p></td>
+</tr>
+<tr class="even">
+<td><p>hr</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="odd">
+<td><p>re</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>ee</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td></tr></table>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>STEP 1</h1>
+
+<h2>Calculating frequencies</h2>
+
+<p>Now calculate <em>probabilities</em> of the pairs</p>
+
+<br />
+<table><tr><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>_t</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="even">
+<td><p>th</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="odd">
+<td><p>he</p></td>
+<td><p>0.1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>e_</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="even">
+<td><p>hr</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="odd">
+<td><p>re</p></td>
+<td><p>0.1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td><td class="noborder">
+
+<table>
+<tbody>
+<tr class="odd">
+<td><p>ee</p></td>
+<td><p>0.1</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</td></tr></table>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>STEP 2</h1>
+
+<h2>Calculating distance between features</h2>
+
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><p>th</p></td>
+<td><p>e_</p></td>
+<td><p>ee</p></td>
+<td><p>el</p></td>
+</tr>
+<tr class="even">
+<td><p>English</p></td>
+<td><p>0.3</p></td>
+<td><p>0.2</p></td>
+<td><p>0.2</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="odd">
+<td><p>Portuguese</p></td>
+<td><p>0.0</p></td>
+<td><p>0.2</p></td>
+<td><p>0.1</p></td>
+<td><p>0.3</p></td>
+</tr>
+</tbody>
+</table>
+
+
+<p>Distance is the <em>sum of squares of differences</em>.</p>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>STEP 2</h1>
+
+<h2>Calculating distance between features</h2>
+
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><p>th</p></td>
+<td><p>e_</p></td>
+<td><p>ee</p></td>
+<td><p>el</p></td>
+</tr>
+<tr class="even">
+<td><p>English</p></td>
+<td><p>0.3</p></td>
+<td><p>0.2</p></td>
+<td><p>0.2</p></td>
+<td><p>0.1</p></td>
+</tr>
+<tr class="odd">
+<td><p>Portuguese</p></td>
+<td><p>0.0</p></td>
+<td><p>0.2</p></td>
+<td><p>0.1</p></td>
+<td><p>0.3</p></td>
+</tr>
+<tr class="even">
+<td><p>Difference</p></td>
+<td><p>0.3</p></td>
+<td><p>0.0</p></td>
+<td><p>0.1</p></td>
+<td><p>-0.2</p></td>
+</tr>
+</tbody>
+</table>
+
+
+<p><em>Sum of squares</em>: <span class="math">\(0.09+0.0+0.01+0.04 = 0.14\)</span></p>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>STEP 3</h1>
+
+<h2>Classifying unknown text</h2>
+
+<table>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><p>English</p></td>
+<td><p>Spanish</p></td>
+<td><p>Portuguese</p></td>
+<td><p>Czech</p></td>
+</tr>
+<tr class="even">
+<td><p>Unknown text</p></td>
+<td><p>0.10</p></td>
+<td><p>0.14</p></td>
+<td><p>0.25</p></td>
+<td><p>0.27</p></td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>PART 1</h1>
+
+<h2><a href="https://github.com/evelinag/LanguageRecognizer">github.com/evelinag/LanguageRecognizer</a></h2>
+
+</section>
+
+</section>
+
+<section >
+
+<section >
+
+<h1>PART 2</h1>
+
+<h2>Recognizing languages <br /> using simple neural net</h2>
+
+<br />
+<div class="fragment">
+
+<p><strong> [ PERCEPTRON ] </strong></p>
+
+</div>
+<div class="fragment">
+
+<p><strong> [ LOGISTIC REGRESSION ] </strong></p>
+
+</div>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>How neural networks work</h1>
+
+<img src="images/network.png" style="width:800px" />
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Network with single neuron</h1>
+
+<img src="images/singlenet.png" style="width:800px" />
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Sigmoid function</h1>
+
+<p><span class="math">\(f(x) = \frac{1}{1 + e^{-x}}\)</span></p>
+
+<img src="images/sigmoid.png" style="width:800px"/>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Learning the weights</h1>
+
+<ul>
+<li><p><strong>Initial weights</strong> can be generated randomly</p></li>
+<li><p><strong>Improve weights</strong> using gradient descent</p></li>
+<li><p><strong>Repeat recursively</strong> until certain error or number of steps</p></li>
+</ul>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Improving using gradient descent</h1>
+
+<img src="images/gradient.png" style="width:800px" />
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Gradient descent in more dimensions</h1>
+
+<img src="images/mexicanhat.png" style="width:800px" />
+
+</section>
+
+</section>
+
+<section >
+
+<section >
+
+<h1>Conclusions</h1>
+
+<h2>Learning more</h2>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Learning more</h1>
+
+<ul>
+<li>The F# Foundation <a href="http://www.fsharp.org">www.fsharp.org</a></li>
+<li><p>FsLab Package <a href="http://www.fslab.org">www.fslab.org</a></p></li>
+<li>Accord.NET <a href="http://accord-framework.net/">accord-framework.net</a></li>
+<li>Diffsharp library <a href="http://diffsharp.github.io/DiffSharp/">diffsharp.github.io/DiffSharp</a></li>
+<li>Hype library for deep learning <a href="http://hypelib.github.io/Hype/">hypelib.github.io/Hype</a></li>
+<li>Vulpes: deep belief networks <a href="https://github.com/fsprojects/Vulpes">github.com/fsprojects/Vulpes</a></li>
+</ul>
+
+</section>
+
+<section author="Evelina Gabasova" description="In this presentation we look at the task of classifying natural languages using two
+machine learning algorithms: nearest neighbour classification, and logistic regression." theme="white" title="F# via machine learning" transition="none">
+
+<h1>Thank you!</h1>
+
+<p><table>
+<tr>
+  <td class="noborder"><img src="images/twitter.png" style="width:70px" /></td>
+  <td style="vertical-align:middle" class="noborder"> <a href="https://twitter.com/evelgab">@evelgab</a></td>
+</tr>
+<tr>
+  <td class="noborder"><img src="images/email.png" style="width:80px" /></td>
+  <td class="noborder" style="vertical-align:middle" > <a href="mailto:evelina@evelinag.com">evelina@evelinag.com</a></td>
+</tr>
+<tr>
+  <td class="noborder"><img src="images/github.png" style="width:70px" /></td>
+  <td class="noborder" style="vertical-align:middle" > <a href="https://github.com/evelinag">github.com/evelinag</a></td>
+</tr>
+<tr>
+  <td class="noborder"></td>
+  <td class="noborder" style="vertical-align:middle" > <a href="http://evelinag.com">evelinag.com</a></td>
+</tr>
+</table></p>
+
+</section>
+
+</section>
+
+
+
+        </div>
+    </div>
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+    <script>
+
+        // Full list of configuration options available here:
+        // https://github.com/hakimel/reveal.js#configuration
+        Reveal.initialize({
+            controls: true,
+            progress: true,
+            history: true,
+            center: true,
+
+            transition: 'none', // default/cube/page/concave/zoom/linear/fade/none
+
+            // Parallax scrolling
+            // parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+            // parallaxBackgroundSize: '2100px 900px',
+
+            // Optional libraries used to extend on reveal.js
+            dependencies: [
+                { src: 'lib/js/classList.js', condition: function () { return !document.body.classList; } },
+                { src: 'plugin/markdown/marked.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/markdown/markdown.js', condition: function () { return !!document.querySelector('[data-markdown]'); } },
+                { src: 'plugin/highlight/highlight.js', async: true, callback: function () { hljs.initHighlightingOnLoad(); } },
+                { src: 'plugin/zoom-js/zoom.js', async: true, condition: function () { return !!document.body.classList; } },
+                { src: 'plugin/notes/notes.js', async: true, condition: function () { return !!document.body.classList; } }
+            ]
+        });
+
+    </script>
+</body>
+</html>
